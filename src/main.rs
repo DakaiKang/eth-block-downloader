@@ -21,12 +21,14 @@ async fn main() -> Result<()> {
     
     // Blocks to download
     let blocks_to_download = vec![
-        46147,    // FRONTIER - simple block
-        1150000,  // HOMESTEAD
-        4370000,  // BYZANTIUM
-        12965000, // LONDON - EIP-1559
-        15537393, // MERGE - PoS
-        19426587, // CANCUN - latest
+        // 46147,    // FRONTIER - simple block
+        // 1150000,  // HOMESTEAD
+        // 4370000,  // BYZANTIUM
+        // 12965000, // LONDON - EIP-1559
+        // 15537393, // MERGE - PoS
+        // 18581726,
+        // 19426587, // CANCUN - latest
+        20000000, // 
     ];
     
     println!("╔════════════════════════════════════════════════════════════════╗");
@@ -241,16 +243,23 @@ async fn download_block_with_debug_trace(
         "number": block_num,
         "timestamp": block.header.timestamp,
         "hash": block.header.hash,
+        "parentHash": format!("{:?}", block.header.parent_hash),
         
-        // Add block environment fields ← 添加这些！
+        // Add block environment fields
         "beneficiary": format!("{:?}", block.header.beneficiary),
         "gasLimit": format!("0x{:x}", block.header.gas_limit),
         "difficulty": format!("0x{:x}", block.header.difficulty),
         "baseFeePerGas": block.header.base_fee_per_gas
             .map(|fee| format!("0x{:x}", fee)),
+
+        "mixHash": format!("{:?}", block.header.mix_hash),
+        "excessBlobGas": block.header.excess_blob_gas
+            .map(|gas| format!("0x{:x}", gas)),
         
         "transactions": block.transactions,
         "prestate": prestate,
+
+        
     });
     
     let filename = format!("test_data/blocks/block_{}.json", block_num);
