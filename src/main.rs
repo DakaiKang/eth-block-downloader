@@ -3,6 +3,7 @@
 use alloy_provider::{Provider, ProviderBuilder};
 use alloy_rpc_types_eth::{Block, BlockId, BlockTransactionsKind};
 use serde_json::{json, Value};
+use std::collections::HashSet;
 use std::fs;
 use std::time::Instant;
 use anyhow::Result;
@@ -28,8 +29,18 @@ async fn main() -> Result<()> {
         // 15537393, // MERGE - PoS
         // 18581726,
         // 19426587, // CANCUN - latest
-        20000000, // 
+        // 20000000, // 
+        10646423,
+        10646424,
+        10646425,
+        10646426,
+        10646440,
     ];
+
+    let blocks_to_download: Vec<u64> = (10646440..10646441).collect();
+    let blocks_to_download: Vec<u64> = (16774645..16774695).collect();
+    let blocks_to_download: Vec<u64> = (18581726..18581776).collect();
+    
     
     println!("╔════════════════════════════════════════════════════════════════╗");
     println!("║       Ethereum Block Downloader (Alchemy + debug API)         ║");
