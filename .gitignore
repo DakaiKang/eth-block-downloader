@@ -6,3 +6,4 @@ api.key
 CLAUDE.md
 evm-sim/cache/
 evm-sim/out/
+evm-sim/lib/

@@ -120,7 +120,8 @@ async fn download_block(
 
     let prestate_full = fetch_prestate(provider, &block_hex, false).await?;
     let prestate_diff = fetch_prestate(provider, &block_hex, true).await?;
-    let rw_sets = compute_rw_sets(&prestate_full, &prestate_diff);
+    let beneficiary = format!("{:?}", block.header.beneficiary).to_lowercase();
+    let rw_sets = compute_rw_sets(&prestate_full, &prestate_diff, &beneficiary);
 
     println!("  RW sets: {} txs ({:.1}s)", rw_sets.as_array().map(|a| a.len()).unwrap_or(0), t0.elapsed().as_secs_f64());
     pb.inc(1);
@@ -240,7 +241,7 @@ async fn fetch_prestate(
 ///
 /// write set = slots present in post-state  (these were modified)
 /// read  set = slots in full access set that are NOT in write set
-fn compute_rw_sets(full: &Value, diff: &Value) -> Value {
+fn compute_rw_sets(full: &Value, diff: &Value, beneficiary: &str) -> Value {
     let empty = vec![];
     let full_txs = full.as_array().unwrap_or(&empty);
     let diff_txs = diff.as_array().unwrap_or(&empty);
@@ -263,7 +264,7 @@ fn compute_rw_sets(full: &Value, diff: &Value) -> Value {
 
         if let Some(addrs) = post_state.as_object() {
             for (addr, acct) in addrs {
-                if acct.get("balance").is_some() {
+                if acct.get("balance").is_some() && addr.to_lowercase() != beneficiary {
                     write_set.insert((addr.clone(), "balance".to_string()));
                     writes.push(json!({"address": addr, "slot": "balance"}));
                 }
@@ -282,6 +283,7 @@ fn compute_rw_sets(full: &Value, diff: &Value) -> Value {
         if let Some(addrs) = full_state.as_object() {
             for (addr, acct) in addrs {
                 if acct.get("balance").is_some()
+                    && addr.to_lowercase() != beneficiary
                     && !write_set.contains(&(addr.clone(), "balance".to_string()))
                 {
                     reads.push(json!({"address": addr, "slot": "balance"}));
