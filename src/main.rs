@@ -9,6 +9,22 @@ use std::time::Instant;
 use anyhow::Result;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
+/// Parse "start:end" range args (end exclusive) from the command line into a
+/// flat list of block numbers. Falls back to a small default range if none given.
+fn parse_block_args() -> Vec<u64> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.is_empty() {
+        return (18581726..18581776).collect();
+    }
+    args.iter().flat_map(|a| {
+        let (s, e) = a.split_once(':')
+            .unwrap_or_else(|| panic!("bad range arg '{}', expected start:end", a));
+        let start: u64 = s.parse().unwrap_or_else(|_| panic!("bad start in '{}'", a));
+        let end: u64 = e.parse().unwrap_or_else(|_| panic!("bad end in '{}'", a));
+        start..end
+    }).collect()
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Configuration
@@ -20,28 +36,13 @@ async fn main() -> Result<()> {
             std::process::exit(1);
         });
     
-    // Blocks to download
-    let blocks_to_download = vec![
-        // 46147,    // FRONTIER - simple block
-        // 1150000,  // HOMESTEAD
-        // 4370000,  // BYZANTIUM
-        // 12965000, // LONDON - EIP-1559
-        // 15537393, // MERGE - PoS
-        // 18581726,
-        // 19426587, // CANCUN - latest
-        // 20000000, // 
-        10646423,
-        10646424,
-        10646425,
-        10646426,
-        10646440,
-    ];
+    // Blocks to download.
+    // Accepts "start:end" range args on the command line (end exclusive),
+    // e.g. `download 21530000:21535000 24141000:24146000`.
+    // With no args, falls back to a small default range.
+    let blocks_to_download: Vec<u64> = parse_block_args();
 
-    let blocks_to_download: Vec<u64> = (10646440..10646441).collect();
-    let blocks_to_download: Vec<u64> = (16774645..16774695).collect();
-    let blocks_to_download: Vec<u64> = (18581726..18581776).collect();
-    
-    
+
     println!("╔════════════════════════════════════════════════════════════════╗");
     println!("║       Ethereum Block Downloader (Alchemy + debug API)         ║");
     println!("╚════════════════════════════════════════════════════════════════╝");

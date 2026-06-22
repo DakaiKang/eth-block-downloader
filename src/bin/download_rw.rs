@@ -19,6 +19,22 @@ use std::time::Instant;
 use anyhow::Result;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
+/// Parse "start:end" range args (end exclusive) from the command line into a
+/// flat list of block numbers. Falls back to a single default block if none given.
+fn parse_block_args() -> Vec<u64> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.is_empty() {
+        return vec![18581726];
+    }
+    args.iter().flat_map(|a| {
+        let (s, e) = a.split_once(':')
+            .unwrap_or_else(|| panic!("bad range arg '{}', expected start:end", a));
+        let start: u64 = s.parse().unwrap_or_else(|_| panic!("bad start in '{}'", a));
+        let end: u64 = e.parse().unwrap_or_else(|_| panic!("bad end in '{}'", a));
+        start..end
+    }).collect()
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let rpc_url = std::env::var("ETHEREUM_RPC_URL")
@@ -27,7 +43,7 @@ async fn main() -> Result<()> {
             std::process::exit(1);
         });
 
-    let blocks_to_download: Vec<u64> = vec![18581726];
+    let blocks_to_download: Vec<u64> = parse_block_args();
 
     println!("RPC URL: {}", rpc_url);
     println!("Blocks to download: {}", blocks_to_download.len());
